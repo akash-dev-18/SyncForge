@@ -1,0 +1,7 @@
+target
+.opencode
+opencode.json
+*.log
+.DS_Store
+.idea
+.vscode

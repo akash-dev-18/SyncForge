@@ -1,0 +1,8 @@
+/target
+/opencode.json
+/.opencode
+*.log
+.env
+.DS_Store
+.idea/
+.vscode/

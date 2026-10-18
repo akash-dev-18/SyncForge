@@ -1,0 +1,56 @@
+[workspace]
+resolver = "2"
+members = [
+    "client",
+    "server",
+    "crates/syncengine-protocol",
+    "crates/syncengine-storage",
+    "crates/syncengine-engine",
+    "crates/syncengine-transport",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+publish = true
+
+[workspace.dependencies]
+anyhow = "1.0"
+async-trait = "0.1"
+axum = { version = "0.8", features = ["ws"] }
+base64 = "0.22"
+blake3 = "1.8"
+chacha20poly1305 = "0.11"
+clap = { version = "4.6", features = ["derive", "env", "wrap_help"] }
+deadpool-postgres = { version = "0.14", features = ["with-time-0_3", "with-uuid-1"] }
+ed25519-dalek = { version = "3", features = ["rand_core"] }
+futures-util = "0.3"
+hex = "0.4"
+hkdf = "0.13"
+hostname = "0.4"
+mdns-sd = "0.21"
+rand = "0.10"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+rusqlite = { version = "0.40", features = ["bundled"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.11"
+tempfile = "3.27"
+thiserror = "2.0"
+time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
+tokio = { version = "1", features = ["full"] }
+tokio-postgres = { version = "0.7", features = ["with-time-0_3", "with-uuid-1"] }
+tokio-tungstenite = { version = "0.30", features = ["rustls-tls-webpki-roots"] }
+toml = "1.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+x25519-dalek = { version = "3", features = ["static_secrets", "serde"] }
+
+syncengine-protocol = { path = "crates/syncengine-protocol", version = "0.1.0" }
+syncengine-storage = { path = "crates/syncengine-storage", version = "0.1.0" }
+syncengine-engine = { path = "crates/syncengine-engine", version = "0.1.0" }
+syncengine-transport = { path = "crates/syncengine-transport", version = "0.1.0" }
+syncengine = { path = "client", version = "0.1.0" }

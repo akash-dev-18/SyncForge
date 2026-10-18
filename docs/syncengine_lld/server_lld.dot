@@ -1,0 +1,36 @@
+digraph ServerLLD {
+  graph [rankdir=LR, bgcolor="#ffffff", pad="0.28", nodesep="0.48", ranksep="0.80", splines=ortho, compound=true, fontname="DejaVu Sans", fontsize=22, labelloc=t, label="SyncEngine — Server LLD UML Class Diagram\nOne Rust server application • metadata only • relay never stores file content", fontcolor="#152c46"];
+  node [shape=plain, fontname="DejaVu Sans", fontsize=10];
+  edge [fontname="DejaVu Sans", fontsize=8, color="#52657a", penwidth=1.25, arrowsize=0.8];
+
+  subgraph cluster_api {
+    label="Control Plane / API"; style="rounded,dashed"; color="#80aee8"; bgcolor="#f3f8ff"; fontcolor="#244e83"; fontsize=13; penwidth=1.5;
+    api [label=< <TABLE BORDER="1" COLOR="#4379bd" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#e4efff"><TR><TD><B>«struct» CoordinationApi</B></TD></TR><TR><TD ALIGN="LEFT">+ register_device()<BR ALIGN="LEFT"/>+ create_pairing_request()<BR ALIGN="LEFT"/>+ approve_pairing()<BR ALIGN="LEFT"/>+ create_relay_session()</TD></TR></TABLE> >];
+    pairing [label=< <TABLE BORDER="1" COLOR="#7a61c8" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f0eaff"><TR><TD><B>«struct» PairingService</B></TD></TR><TR><TD ALIGN="LEFT">+ request_pairing()<BR ALIGN="LEFT"/>+ approve_pairing()<BR ALIGN="LEFT"/>+ revoke_device()<BR ALIGN="LEFT"/>+ validate_pairing_code()</TD></TR></TABLE> >];
+    authz [label=< <TABLE BORDER="1" COLOR="#cb7770" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff0ed"><TR><TD><B>«struct» AuthorizationService</B></TD></TR><TR><TD ALIGN="LEFT">+ can_connect()<BR ALIGN="LEFT"/>+ verify_folder_access()<BR ALIGN="LEFT"/>+ validate_session_owner()</TD></TR></TABLE> >];
+  }
+
+  subgraph cluster_relay {
+    label="Encrypted Relay Data Plane"; style="rounded,dashed"; color="#d5a04b"; bgcolor="#fffaf0"; fontcolor="#86591a"; fontsize=13; penwidth=1.5;
+    relay [label=< <TABLE BORDER="1" COLOR="#d29a37" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff4d9"><TR><TD><B>«struct» RelayService</B></TD></TR><TR><TD ALIGN="LEFT">+ open_session()<BR ALIGN="LEFT"/>+ forward_opaque_frame()<BR ALIGN="LEFT"/>+ enforce_backpressure()<BR ALIGN="LEFT"/>+ close_session()</TD></TR></TABLE> >];
+    session [label=< <TABLE BORDER="1" COLOR="#d29a37" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff4d9"><TR><TD><B>«struct» RelaySession</B></TD></TR><TR><TD ALIGN="LEFT">session_id, device_a, device_b<BR ALIGN="LEFT"/>state, limits, opened_at</TD></TR><TR><TD ALIGN="LEFT">+ accept_frame()<BR ALIGN="LEFT"/>+ close()</TD></TR></TABLE> >];
+    frame [label=< <TABLE BORDER="1" COLOR="#3c9c9b" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#ddfbf8"><TR><TD><B>«struct» EncryptedFrame</B></TD></TR><TR><TD ALIGN="LEFT">session_id, sequence_no<BR ALIGN="LEFT"/>ciphertext, payload_length</TD></TR><TR><TD ALIGN="LEFT">Opaque to relay; no file plaintext</TD></TR></TABLE> >];
+  }
+
+  subgraph cluster_db {
+    label="Metadata Persistence"; style="rounded,dashed"; color="#7eafd7"; bgcolor="#f2fbff"; fontcolor="#245d7b"; fontsize=13; penwidth=1.5;
+    repo [label=< <TABLE BORDER="1" COLOR="#367ca9" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#e0f3ff"><TR><TD><B>«trait» MetadataRepository</B></TD></TR><TR><TD ALIGN="LEFT">+ save_device()<BR ALIGN="LEFT"/>+ save_pairing()<BR ALIGN="LEFT"/>+ get_relationship()<BR ALIGN="LEFT"/>+ save_session_metadata()</TD></TR></TABLE> >];
+    pg [label=< <TABLE BORDER="1" COLOR="#367ca9" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#e0f3ff"><TR><TD><B>«struct» PostgresRepository</B></TD></TR><TR><TD ALIGN="LEFT">PostgreSQL adapter<BR ALIGN="LEFT"/>devices, relationships,<BR ALIGN="LEFT"/>folder memberships,<BR ALIGN="LEFT"/>pairing + session metadata</TD></TR></TABLE> >];
+  }
+
+  api -> pairing [label="pairing actions"];
+  api -> authz [label="authorize requests"];
+  api -> relay [label="creates authorized session"];
+  relay -> authz [label="session check"];
+  relay -> session [label="manages"];
+  session -> frame [label="forwards frames"];
+  pairing -> repo [label="persist trust state"];
+  authz -> repo [label="lookup permissions"];
+  relay -> repo [label="session metadata only", style=dashed];
+  pg -> repo [arrowhead=empty, style=dashed, label="implements"];
+}

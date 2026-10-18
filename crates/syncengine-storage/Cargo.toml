@@ -1,0 +1,19 @@
+[package]
+name = "syncengine-storage"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Local SQLite persistence: schema, migrations, and the Store trait"
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+rusqlite = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+syncengine-protocol = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

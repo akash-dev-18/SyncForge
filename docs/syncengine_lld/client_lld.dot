@@ -1,0 +1,64 @@
+digraph ClientLLD {
+  graph [rankdir=LR, bgcolor="#ffffff", pad="0.28", nodesep="0.40", ranksep="0.75", splines=ortho, compound=true, fontname="DejaVu Sans", fontsize=22, labelloc=t, label="SyncEngine — Client LLD UML Class Diagram\nRust client modules • logical types, not separate processes", fontcolor="#152c46"];
+  node [shape=plain, fontname="DejaVu Sans", fontsize=10];
+  edge [fontname="DejaVu Sans", fontsize=8, color="#52657a", penwidth=1.25, arrowsize=0.8];
+
+  subgraph cluster_app {
+    label="Application & Sync Orchestration"; style="rounded,dashed"; color="#80aee8"; bgcolor="#f3f8ff"; fontcolor="#244e83"; fontsize=13; penwidth=1.5;
+    agent [label=< <TABLE BORDER="1" COLOR="#4379bd" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#e4efff"><TR><TD><B>«struct» SyncAgent</B></TD></TR><TR><TD ALIGN="LEFT">- sync_engine: SyncEngine<BR ALIGN="LEFT"/>- watcher: FileWatcher</TD></TR><TR><TD ALIGN="LEFT">+ start()<BR ALIGN="LEFT"/>+ stop()<BR ALIGN="LEFT"/>+ trigger_sync()<BR ALIGN="LEFT"/>+ retry_pending()</TD></TR></TABLE> >];
+    cli [label=< <TABLE BORDER="1" COLOR="#7a61c8" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#f0eaff"><TR><TD><B>«struct» Cli</B></TD></TR><TR><TD ALIGN="LEFT">+ pair()<BR ALIGN="LEFT"/>+ share_path()<BR ALIGN="LEFT"/>+ sync_now()<BR ALIGN="LEFT"/>+ show_status()</TD></TR></TABLE> >];
+    sync [label=< <TABLE BORDER="1" COLOR="#d76565" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#fff0ef"><TR><TD><B>«struct» SyncEngine</B></TD></TR><TR><TD ALIGN="LEFT">- store: Store<BR ALIGN="LEFT"/>- resolver: ConflictResolver</TD></TR><TR><TD ALIGN="LEFT">+ plan_sync(peer)<BR ALIGN="LEFT"/>+ compare_versions()<BR ALIGN="LEFT"/>+ queue_change()<BR ALIGN="LEFT"/>+ apply_remote_change()</TD></TR></TABLE> >];
+    watcher [label=< <TABLE BORDER="1" COLOR="#4b9b75" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#e9fff1"><TR><TD><B>«struct» FileWatcher</B></TD></TR><TR><TD ALIGN="LEFT">+ start_watch(root)<BR ALIGN="LEFT"/>+ next_event()</TD></TR></TABLE> >];
+    scanner [label=< <TABLE BORDER="1" COLOR="#4b9b75" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#e9fff1"><TR><TD><B>«struct» Reconciler</B></TD></TR><TR><TD ALIGN="LEFT">+ scan_root(root)<BR ALIGN="LEFT"/>+ repair_missed_events()<BR ALIGN="LEFT"/>Note: incomplete scans ≠ deletions</TD></TR></TABLE> >];
+  }
+
+  subgraph cluster_domain {
+    label="Sync Domain & Conflict Handling"; style="rounded,dashed"; color="#e3a19b"; bgcolor="#fff9f7"; fontcolor="#87423c"; fontsize=13; penwidth=1.5;
+    change [label=< <TABLE BORDER="1" COLOR="#cb7770" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#fff0ed"><TR><TD><B>«struct» ChangeRecord</B></TD></TR><TR><TD ALIGN="LEFT">change_id, folder_id<BR ALIGN="LEFT"/>relative_path, operation<BR ALIGN="LEFT"/>content_hash, size<BR ALIGN="LEFT"/>version: VersionVector</TD></TR></TABLE> >];
+    vv [label=< <TABLE BORDER="1" COLOR="#cb7770" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#fff0ed"><TR><TD><B>«struct» VersionVector</B></TD></TR><TR><TD ALIGN="LEFT">counters: DeviceId → u64</TD></TR><TR><TD ALIGN="LEFT">+ increment(device)<BR ALIGN="LEFT"/>+ compare(other): CausalOrder</TD></TR></TABLE> >];
+    resolver [label=< <TABLE BORDER="1" COLOR="#cb7770" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#fff0ed"><TR><TD><B>«struct» ConflictResolver</B></TD></TR><TR><TD ALIGN="LEFT">+ detect_concurrent()<BR ALIGN="LEFT"/>+ preserve_conflict_copy()<BR ALIGN="LEFT"/>+ choose_safe_destination()</TD></TR></TABLE> >];
+  }
+
+  subgraph cluster_transfer {
+    label="Shared Transfer Pipeline & Transports"; style="rounded,dashed"; color="#9a8be0"; bgcolor="#f8f6ff"; fontcolor="#4c3d91"; fontsize=13; penwidth=1.5;
+    transfer [label=< <TABLE BORDER="1" COLOR="#7360ca" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#e9e5ff"><TR><TD><B>«struct» TransferEngine</B></TD></TR><TR><TD ALIGN="LEFT">+ send_change()<BR ALIGN="LEFT"/>+ receive_chunk()<BR ALIGN="LEFT"/>+ resume_transfer()<BR ALIGN="LEFT"/>+ finalize_verified_file()</TD></TR></TABLE> >];
+    transport [label=< <TABLE BORDER="1" COLOR="#7360ca" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#f1edff"><TR><TD><B>«trait» TransferTransport</B></TD></TR><TR><TD ALIGN="LEFT">+ send_frame()<BR ALIGN="LEFT"/>+ receive_frame()<BR ALIGN="LEFT"/>+ reconnect()</TD></TR></TABLE> >];
+    online [label=< <TABLE BORDER="1" COLOR="#d29a37" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#fff4d9"><TR><TD><B>«struct» OnlineTransport</B></TD></TR><TR><TD ALIGN="LEFT">+ connect_relay()<BR ALIGN="LEFT"/>+ send_frame()<BR ALIGN="LEFT"/>+ reconnect()</TD></TR></TABLE> >];
+    lan [label=< <TABLE BORDER="1" COLOR="#3c9c9b" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#ddfbf8"><TR><TD><B>«struct» LanTransport</B></TD></TR><TR><TD ALIGN="LEFT">+ discover_peers_mdns()<BR ALIGN="LEFT"/>+ connect_direct()<BR ALIGN="LEFT"/>+ send_frame()</TD></TR></TABLE> >];
+    chunker [label=< <TABLE BORDER="1" COLOR="#7360ca" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#f1edff"><TR><TD><B>«struct» Chunker</B></TD></TR><TR><TD ALIGN="LEFT">+ split_file()<BR ALIGN="LEFT"/>+ assemble_chunks()</TD></TR></TABLE> >];
+    verifier [label=< <TABLE BORDER="1" COLOR="#7360ca" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#f1edff"><TR><TD><B>«struct» IntegrityVerifier</B></TD></TR><TR><TD ALIGN="LEFT">+ hash_chunk()<BR ALIGN="LEFT"/>+ verify_content_hash()</TD></TR></TABLE> >];
+  }
+
+  subgraph cluster_persistence {
+    label="Local Persistence & Identity"; style="rounded,dashed"; color="#7eafd7"; bgcolor="#f2fbff"; fontcolor="#245d7b"; fontsize=13; penwidth=1.5;
+    store [label=< <TABLE BORDER="1" COLOR="#367ca9" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#e0f3ff"><TR><TD><B>«trait» Store</B></TD></TR><TR><TD ALIGN="LEFT">+ append_change()<BR ALIGN="LEFT"/>+ pending_for_peer()<BR ALIGN="LEFT"/>+ save_checkpoint()<BR ALIGN="LEFT"/>+ mark_applied()</TD></TR></TABLE> >];
+    sqlite [label=< <TABLE BORDER="1" COLOR="#367ca9" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#e0f3ff"><TR><TD><B>«struct» SqliteStore</B></TD></TR><TR><TD ALIGN="LEFT">SQLite transactions + WAL<BR ALIGN="LEFT"/>Change journal, peers,<BR ALIGN="LEFT"/>tombstones, conflicts,<BR ALIGN="LEFT"/>transfer checkpoints</TD></TR></TABLE> >];
+    identity [label=< <TABLE BORDER="1" COLOR="#d76565" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" BGCOLOR="#fff0ef"><TR><TD><B>«struct» IdentityManager</B></TD></TR><TR><TD ALIGN="LEFT">+ load_or_create_keys()<BR ALIGN="LEFT"/>+ authenticate_peer()<BR ALIGN="LEFT"/>+ encrypt_payload()<BR ALIGN="LEFT"/>+ revoke_peer()</TD></TR></TABLE> >];
+  }
+
+  cli -> agent [label="commands"];
+  agent -> watcher [label="events"];
+  agent -> scanner [label="periodic scan"];
+  agent -> sync [label="orchestrates"];
+  watcher -> sync [label="change hints"];
+  scanner -> sync [label="reconciliation results"];
+  sync -> change [label="creates / consumes"];
+  change -> vv [label="contains"];
+  sync -> resolver [label="concurrent versions"];
+  sync -> transfer [label="planned changes"];
+  transfer -> transport [label="uses abstraction"];
+  online -> transport [arrowhead=empty, style=dashed, label="implements"];
+  lan -> transport [arrowhead=empty, style=dashed, label="implements"];
+  transfer -> chunker [label="chunks"];
+  transfer -> verifier [label="validates"];
+  sync -> store [label="journals / queries"];
+  transfer -> store [label="durable checkpoints"];
+  sqlite -> store [arrowhead=empty, style=dashed, label="implements"];
+  online -> identity [style=dashed, label="peer auth / keys"];
+  lan -> identity [style=dashed, label="peer auth / keys"];
+
+  {rank=same; cli; agent}
+  {rank=same; watcher; scanner}
+  {rank=same; online; lan}
+  {rank=same; store; identity}
+}
